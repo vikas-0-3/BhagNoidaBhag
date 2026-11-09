@@ -1,0 +1,142 @@
+<title>Bhag Noida Bhag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Hind:wght@500;600;700&family=Space+Mono:wght@700&display=swap">
+<style>
+/* Layout: full-screen WebGL stage, HUD overlay top/bottom, centered card menus. Single dusk-night look by choice. */
+:root{
+  --ink:#14121f; --ink2:#221e36; --paper:#fff4dc;
+  --marigold:#ffb400; --aqua:#00c2d1; --chilli:#e5322d; --leaf:#2fbf71;
+  --f-display:'Bungee','Impact',sans-serif;
+  --f-body:'Hind','Segoe UI',system-ui,sans-serif;
+  --f-mono:'Space Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--f-body);font-size:16px;touch-action:none;user-select:none;-webkit-user-select:none}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;width:100%;height:100%}
+.screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px max(16px,env(safe-area-inset-left,0px));background:radial-gradient(ellipse at 50% 30%,rgba(255,180,0,.18),transparent 60%),rgba(20,18,31,.82);overflow:auto;z-index:20}
+.screen[hidden]{display:none}
+.card{width:min(480px,100%);display:flex;flex-direction:column;gap:14px;padding:22px 20px;background:var(--ink2);border:3px solid var(--marigold);border-radius:6px;box-shadow:8px 8px 0 var(--chilli);max-height:100%;overflow:auto}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,8vw,44px);line-height:.95;margin:0;color:var(--marigold);text-shadow:3px 3px 0 var(--chilli);text-wrap:balance}
+.hi{font-size:15px;color:var(--aqua);font-weight:700;letter-spacing:.08em;margin-top:-6px}
+label.l{font-family:var(--f-mono);font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--aqua)}
+input#name{width:100%;font:700 20px var(--f-body);padding:10px 12px;background:var(--ink);color:var(--paper);border:2px solid var(--aqua);border-radius:4px;user-select:text;-webkit-user-select:text;touch-action:auto}
+input#name:focus-visible,button:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;background:var(--ink);color:var(--paper);border:2px solid #4a4466;border-radius:4px;font:700 15px var(--f-body);cursor:pointer}
+.pick button svg{width:64px;height:76px}
+.pick button[aria-pressed=true]{border-color:var(--marigold);background:#2e2748;box-shadow:inset 0 0 0 2px var(--marigold)}
+.btn{font:400 22px var(--f-display);padding:12px 16px;background:var(--marigold);color:var(--ink);border:0;border-radius:4px;box-shadow:0 5px 0 #b57c00;cursor:pointer;text-transform:uppercase}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #b57c00}
+.btn.alt{background:var(--aqua);box-shadow:0 5px 0 #007b85;font-size:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+.stats{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--f-mono);font-size:13px;color:#c9c2e2}
+.stats b{color:var(--marigold);font-size:16px}
+.board{margin:0;padding:0;list-style:none;font-family:var(--f-mono);font-size:13px;display:grid;gap:3px}
+.board li{display:flex;justify-content:space-between;gap:8px;padding:4px 8px;background:var(--ink);border-radius:3px}
+.board li:first-child{color:var(--marigold)}
+.hint{font-size:13px;color:#b5aed0;line-height:1.35;margin:0}
+kbd{font-family:var(--f-mono);background:var(--ink);border:1px solid #4a4466;border-radius:3px;padding:0 5px}
+.big{font-family:var(--f-display);font-size:clamp(40px,12vw,64px);color:var(--marigold);line-height:1;text-shadow:3px 3px 0 var(--chilli)}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10;padding:max(10px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-left,0px)) 10px;display:flex;flex-direction:column;justify-content:space-between}
+#hud[hidden]{display:none}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pill{font-family:var(--f-mono);font-weight:700;background:rgba(20,18,31,.78);border:2px solid var(--marigold);border-radius:4px;padding:4px 10px;font-size:15px}
+.score{font-family:var(--f-display);font-size:clamp(22px,6vw,34px);color:var(--marigold);text-shadow:2px 2px 0 var(--chilli);line-height:1}
+.sub{font-family:var(--f-mono);font-size:12px;color:#d6d0ee;margin-top:4px}
+.btns{display:flex;gap:8px;pointer-events:auto}
+.ib{width:42px;height:42px;font:700 18px var(--f-mono);background:rgba(20,18,31,.78);color:var(--paper);border:2px solid var(--aqua);border-radius:4px;cursor:pointer}
+#chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font:700 12px var(--f-mono);padding:3px 8px;border-radius:3px;background:var(--ink);border:2px solid;position:relative;overflow:hidden}
+.chip i{position:absolute;left:0;bottom:0;height:3px;background:currentColor}
+#zone{position:fixed;left:50%;top:22%;transform:translate(-50%,-20px);text-align:center;opacity:0;transition:opacity .4s,transform .4s;z-index:11;pointer-events:none;width:min(90vw,520px)}
+#zone.on{opacity:1;transform:translate(-50%,0)}
+#zone .z1{font-family:var(--f-display);font-size:clamp(24px,7vw,42px);color:var(--paper);text-shadow:3px 3px 0 var(--chilli);text-wrap:balance}
+#zone .z2{font-family:var(--f-mono);font-size:13px;color:var(--aqua);margin-top:4px}
+.bottom{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+#police{display:flex;align-items:center;gap:8px;font:700 12px var(--f-mono);max-width:360px}
+#police .bar{flex:1;height:10px;background:var(--ink);border:2px solid var(--paper);border-radius:2px;position:relative;overflow:hidden}
+#police .bar i{position:absolute;inset:0 auto 0 0;background:var(--chilli);width:50%;transition:width .2s}
+#route{display:flex;align-items:center;gap:0;font:700 10px var(--f-mono);overflow:hidden}
+#route .st{flex:1;text-align:center;position:relative;padding-top:12px;white-space:nowrap;overflow:hidden;text-overflow:clip;color:#9a93b8}
+#route .st::before{content:"";position:absolute;left:0;right:0;top:3px;height:4px;background:#4a4466}
+#route .st::after{content:"";position:absolute;left:50%;top:0;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--ink);border:2px solid #9a93b8}
+#route .st.done{color:var(--aqua)}#route .st.done::before{background:var(--aqua)}#route .st.done::after{border-color:var(--aqua);background:var(--aqua)}
+#route .st.cur{color:var(--marigold)}#route .st.cur::after{border-color:var(--marigold);background:var(--marigold);transform:scale(1.35)}
+#flash{position:fixed;inset:0;background:var(--chilli);opacity:0;pointer-events:none;z-index:12;transition:opacity .35s}
+#toast{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);font:400 22px var(--f-display);color:var(--marigold);text-shadow:2px 2px 0 var(--ink);opacity:0;transition:opacity .3s;z-index:11;pointer-events:none;text-align:center}
+#toast.on{opacity:1}
+@media (max-width:520px){#route .st{font-size:8px}.card{box-shadow:5px 5px 0 var(--chilli)}}
+@media (prefers-reduced-motion:reduce){#zone,#flash,#toast{transition:none}}
+</style>
+
+<div id="stage"></div>
+
+<div id="hud" hidden>
+  <div class="top">
+    <div>
+      <div class="score" id="hScore">0</div>
+      <div class="sub"><span id="hDist">0</span> m &middot; <span id="hName"></span></div>
+      <div id="chips"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+      <div class="pill">&#8377; <span id="hCoins">0</span></div>
+      <div class="btns"><button class="ib" id="bMute" aria-label="Toggle sound">&#9835;</button><button class="ib" id="bPause" aria-label="Pause">II</button></div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div id="police"><span>POLICE</span><div class="bar"><i id="pBar"></i></div></div>
+    <div id="route" aria-label="Route progress"></div>
+  </div>
+</div>
+<div id="zone"><div class="z1"></div><div class="z2"></div></div>
+<div id="toast"></div>
+<div id="flash"></div>
+
+<div class="screen" id="menu">
+  <div class="card">
+    <div><h1>Bhag Noida Bhag</h1></div>
+    <div class="hi">भाग नोएडा भाग &middot; Run the city. Outrun the law.</div>
+    <div>
+      <label class="l" for="name">Your name</label>
+      <input id="name" maxlength="14" autocomplete="off" placeholder="Rohit" value="">
+    </div>
+    <div>
+      <label class="l" id="chLabel">Pick your runner</label>
+      <div class="pick" role="group" aria-labelledby="chLabel">
+        <button id="gM" aria-pressed="true" type="button">
+          <svg viewBox="0 0 64 76"><rect x="14" y="40" width="36" height="30" rx="6" fill="#00c2d1"/><rect x="22" y="14" width="20" height="24" rx="8" fill="#e0a070"/><path d="M20 22q0-14 12-14t12 14q-6-8-12-8t-12 8z" fill="#1a1a1a"/><rect x="26" y="26" width="3" height="3" fill="#14121f"/><rect x="35" y="26" width="3" height="3" fill="#14121f"/></svg>
+          Boy
+        </button>
+        <button id="gF" aria-pressed="false" type="button">
+          <svg viewBox="0 0 64 76"><rect x="14" y="40" width="36" height="30" rx="6" fill="#e5322d"/><path d="M18 40q14 10 28 0" fill="none" stroke="#ffb400" stroke-width="5"/><rect x="22" y="14" width="20" height="24" rx="8" fill="#e0a070"/><path d="M19 30q-3-22 13-22t13 22q-2-14-13-14t-13 14z" fill="#1a1a1a"/><rect x="44" y="18" width="6" height="30" rx="3" fill="#1a1a1a"/><rect x="26" y="26" width="3" height="3" fill="#14121f"/><rect x="35" y="26" width="3" height="3" fill="#14121f"/></svg>
+          Girl
+        </button>
+      </div>
+    </div>
+    <div class="stats"><span>Best <b id="mBest">0</b></span><span>Coins <b id="mCoins">0</b></span><span>Runs <b id="mRuns">0</b></span></div>
+    <button class="btn" id="bPlay" type="button">Bhaag!</button>
+    <p class="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>A</kbd><kbd>D</kbd> switch lanes &middot; <kbd>&uarr;</kbd>/<kbd>Space</kbd> jump &middot; <kbd>&darr;</kbd> slide &middot; Phone: swipe. Jump low barricades, slide under bars, dodge cars, autos and cows.</p>
+    <ul class="board" id="mBoard"></ul>
+  </div>
+</div>
+
+<div class="screen" id="pause" hidden>
+  <div class="card"><div class="big">Paused</div>
+    <button class="btn" id="bResume" type="button">Resume</button>
+    <button class="btn alt" id="bQuit" type="button">Quit to menu</button></div>
+</div>
+
+<div class="screen" id="over" hidden>
+  <div class="card">
+    <div class="big" id="oTitle">Pakde Gaye!</div>
+    <div class="hint" id="oSub"></div>
+    <div class="stats"><span>Score <b id="oScore">0</b></span><span>Distance <b id="oDist">0</b> m</span><span>Coins <b id="oCoins">0</b></span></div>
+    <div class="hint" id="oNew"></div>
+    <ul class="board" id="oBoard"></ul>
+    <div class="row"><button class="btn" id="bAgain" type="button">Run again</button><button class="btn alt" id="bMenu" type="button">Menu</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
